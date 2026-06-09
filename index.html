@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligent Resource Governor | Dashboard</title>
+  <link rel="stylesheet" href="index.css">
+  <!-- Load Chart.js for premium dark-themed charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Intelligent Resource Governor</h1>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">Predictive Load-Shedding Edge Middleware</p>
+      </div>
+    </div>
+    
+    <div id="system-status-badge" class="system-badge stable">
+      <span class="badge-dot"></span>
+      <span id="system-status-text">STABLE STATE</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Sidebar: Controls & Metrics -->
+    <section class="sidebar">
+      
+      <!-- Operations Card -->
+      <div class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 0.25rem;">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+          Operations Console
+        </h2>
+        
+        <div class="control-group">
+          <!-- Toggle AI Governor -->
+          <div class="toggle-container">
+            <div class="toggle-label">
+              <span>AI Middleware Gate</span>
+              <span>Enable predictive protection</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="ai-middleware-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <!-- Toggle Concurrency Surcharges -->
+          <div class="toggle-container">
+            <div class="toggle-label">
+              <span>Simulate Load Spike</span>
+              <span>Flood system with traffic</span>
+            </div>
+            <label class="switch switch-danger">
+              <input type="checkbox" id="load-spike-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <!-- Retrain Model Button -->
+          <button id="retrain-model-btn" class="btn" style="width: 100%; margin-top: 0.5rem;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
+            </svg>
+            Retrain AI Model
+          </button>
+        </div>
+      </div>
+      
+      <!-- Traffic Counters Card -->
+      <div class="card">
+        <h2 class="card-title">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 0.25rem;">
+            <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/>
+          </svg>
+          Transaction Streams
+        </h2>
+        
+        <div class="control-group" style="gap: 0.75rem;">
+          <div class="metric-row">
+            <span class="metric-row-label">Gold Checkout (/pay)</span>
+            <span id="metrics-allowed-pay" class="metric-row-value allowed">0</span>
+          </div>
+          
+          <div class="metric-row">
+            <span class="metric-row-label">Allowed Browse (/browse)</span>
+            <span id="metrics-allowed-browse" class="metric-row-value allowed">0</span>
+          </div>
+          
+          <div class="metric-row">
+            <span class="metric-row-label">Shed Browse (HTTP 429)</span>
+            <span id="metrics-shed-browse" class="metric-row-value shed">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info / Log Upload Guide -->
+      <div class="card" style="padding: 1.25rem; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted);">
+        <h3 style="color: var(--text-main); font-weight: 600; margin-bottom: 0.5rem;">How it works</h3>
+        <p style="margin-bottom: 0.5rem;"><strong>Gold Checkout</strong> bypasses the governor entirely to protect transaction revenue.</p>
+        <p><strong>Deferred path</strong> (/browse) is dynamically intercepted 30 seconds before system failure when the <strong>AI Middleware Gate</strong> is active.</p>
+      </div>
+
+    </section>
+
+    <!-- Center/Right Dashboard Layout -->
+    <section class="dashboard-content">
+      
+      <!-- Live Gauges Panel -->
+      <div class="gauges-grid">
+        <!-- CPU Gauge -->
+        <div class="card gauge-card">
+          <span class="gauge-label">CPU Utilization</span>
+          <div class="gauge-visual">
+            <svg class="gauge-circle" viewBox="0 0 120 120">
+              <circle class="gauge-circle-bg" cx="60" cy="60" r="50"></circle>
+              <circle id="gauge-cpu-circle" class="gauge-circle-progress" cx="60" cy="60" r="50"></circle>
+            </svg>
+            <div id="gauge-cpu-val" class="gauge-value">0%</div>
+          </div>
+          <span class="gauge-subtext">Core Processing Load</span>
+        </div>
+        
+        <!-- RAM Gauge -->
+        <div class="card gauge-card">
+          <span class="gauge-label">RAM Utilization</span>
+          <div class="gauge-visual">
+            <svg class="gauge-circle" viewBox="0 0 120 120">
+              <circle class="gauge-circle-bg" cx="60" cy="60" r="50"></circle>
+              <circle id="gauge-ram-circle" class="gauge-circle-progress" cx="60" cy="60" r="50" style="stroke: #8b5cf6;"></circle>
+            </svg>
+            <div id="gauge-ram-val" class="gauge-value">0%</div>
+          </div>
+          <span class="gauge-subtext">Buffer Memory Usage</span>
+        </div>
+
+        <!-- Latency Display -->
+        <div class="card gauge-card" style="align-items: center; justify-content: center;">
+          <span class="gauge-label">Response Latency</span>
+          <div id="gauge-latency-val" class="latency-display">10.0 ms</div>
+          <span class="gauge-subtext">Simulated DB Roundtrip</span>
+        </div>
+
+        <!-- Request Rate Display -->
+        <div class="card gauge-card" style="align-items: center; justify-content: center;">
+          <span class="gauge-label">Aggregate Request Rate</span>
+          <div id="gauge-request-val" class="latency-display" style="color: #3b82f6;">10 rps</div>
+          <span class="gauge-subtext">Requests per Second</span>
+        </div>
+      </div>
+
+      <!-- Real-Time Sliding Telemetry Chart -->
+      <div class="card">
+        <h2 class="card-title">
+          <span class="badge-dot" style="background-color: var(--primary);"></span>
+          Real-Time Live Telemetry (Rolling 30s Window)
+        </h2>
+        <div class="chart-container">
+          <canvas id="live-rolling-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Ingestion & Historical Workspace -->
+      <div class="card">
+        <h2 class="card-title" style="margin-bottom: 0.5rem;">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 0.25rem;">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+          </svg>
+          Telemetry Ingestion Workspace
+        </h2>
+        <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Upload server telemetry CSV logs to run historical analytics, map inflection points, and display where the ML model classifies state boundaries.
+        </p>
+
+        <!-- Drag & Drop Zone -->
+        <div id="drag-drop-zone" class="drag-drop-zone">
+          <div class="upload-icon">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+          </div>
+          <div class="upload-text">Drag & Drop telemetry log CSV here</div>
+          <div class="upload-subtext">or click to browse local files</div>
+          <input type="file" id="csv-file-input" accept=".csv">
+          
+          <div id="upload-progress-container" class="progress-bar-container">
+            <div id="upload-progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <div id="historical-canvas-section" style="margin-top: 2rem; display: none;">
+          <h3 class="card-title" style="margin-bottom: 1rem;">
+            Historical Ingested Metrics & Transition Inflections
+          </h3>
+          <div class="chart-container">
+            <canvas id="historical-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Load Dashboard Logic -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
