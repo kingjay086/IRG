@@ -1,6 +1,8 @@
 import os
 import asyncio
 import threading
+import subprocess
+import sys
 import logging
 from typing import Set
 import joblib
@@ -18,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("IRG_Server")
 
 # Paths
-WORKSPACE_DIR = r"C:\Users\Divya Mohan Nayak\OneDrive\Desktop\New folder"
+WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(WORKSPACE_DIR, "governor_model.pkl")
 CSV_PATH = os.path.join(WORKSPACE_DIR, "server_logs.csv")
 
@@ -53,10 +55,27 @@ class ServerState:
         self.shed_browse = 0
         self.allowed_pay = 0
         
+        # Subprocess state
+        self.locust_process = None
+        
         # ML Model holder
         self.model = None
         self.load_model()
         
+    def start_locust(self):
+        if self.locust_process is None:
+            logger.info("Starting Locust traffic simulator...")
+            cmd = [sys.executable, "-m", "locust", "-f", "locustfile.py", "--headless", "-u", "100", "-r", "10", "--host", "http://127.0.0.1:8088"]
+            # Start locust in the background, ignoring stdout/stderr to avoid cluttering terminal
+            self.locust_process = subprocess.Popen(cmd, cwd=WORKSPACE_DIR, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def stop_locust(self):
+        if self.locust_process is not None:
+            logger.info("Stopping Locust traffic simulator...")
+            self.locust_process.terminate()
+            self.locust_process.wait()
+            self.locust_process = None
+
     def load_model(self):
         if os.path.exists(MODEL_PATH):
             try:
@@ -212,6 +231,13 @@ def toggle_spike(req: ToggleRequest):
     state.allowed_browse = 0
     state.shed_browse = 0
     state.allowed_pay = 0
+    
+    # Start or stop the actual Locust HTTP traffic based on the toggle
+    if state.simulate_load_spike:
+        state.start_locust()
+    else:
+        state.stop_locust()
+        
     logger.info(f"Simulate Load Spike toggled to: {state.simulate_load_spike}")
     return {"status": "success", "simulate_load_spike": state.simulate_load_spike}
 

@@ -317,53 +317,68 @@ fileInput.addEventListener("change", () => {
   }
 });
 
-// XML HTTP Request for file uploads with progress bar tracking
+// File upload and processing
 function handleCSVUpload(file) {
-  progressContainer.style.display = "block";
-  progressBar.style.width = "0%";
-  
-  const xhr = new XMLHttpRequest();
-  const formData = new FormData();
-  formData.append("file", file);
-  
-  xhr.open("POST", `${API_URL}/upload-csv`, true);
-  
-  xhr.upload.onprogress = (e) => {
-    if (e.lengthComputable) {
-      const percentage = (e.loaded / e.total) * 100;
-      progressBar.style.width = `${percentage}%`;
-    }
-  };
-  
-  xhr.onload = () => {
-    if (xhr.status === 200) {
+  try {
+    progressContainer.style.display = "block";
+    progressBar.style.width = "10%";
+    
+    // 1. Instantly parse and render the chart locally so the UI updates immediately!
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        renderHistoricalChart(e.target.result);
+      } catch (err) {
+        console.error("Error rendering chart:", err);
+        alert("Error parsing CSV for the chart: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+
+    // 2. Upload to backend for model retraining
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    xhr.open("POST", `${API_URL}/upload-csv`, true);
+    
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        // Start from 10% to show initial progress
+        const percentage = 10 + ((e.loaded / e.total) * 90);
+        progressBar.style.width = `${percentage}%`;
+      }
+    };
+    
+    xhr.onload = () => {
       progressBar.style.width = "100%";
       setTimeout(() => {
         progressContainer.style.display = "none";
       }, 1000);
-      
-      const response = JSON.parse(xhr.responseText);
-      alert(response.message);
-      
-      // Parse file locally to render historical chart
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        renderHistoricalChart(e.target.result);
-      };
-      reader.readAsText(file);
-    } else {
-      console.error(xhr.responseText);
-      alert("Failed to upload telemetry log file.");
+
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          alert(response.message || "Successfully loaded telemetry logs!");
+        } catch (e) {
+          alert("Successfully uploaded, but received invalid JSON response from server.");
+        }
+      } else {
+        console.error(xhr.responseText);
+        alert(`Failed to upload to server. Status: ${xhr.status}. See console for details.`);
+      }
+    };
+    
+    xhr.onerror = () => {
       progressContainer.style.display = "none";
-    }
-  };
-  
-  xhr.onerror = () => {
-    alert("Network error during file upload.");
-    progressContainer.style.display = "none";
-  };
-  
-  xhr.send(formData);
+      alert("Network error occurred while trying to upload the file to the backend.");
+    };
+    
+    xhr.send(formData);
+  } catch (err) {
+    console.error("Critical error in handleCSVUpload:", err);
+    alert("An unexpected error occurred: " + err.message);
+  }
 }
 
 // Client-side CSV Parser & Historical Chart Renderer
@@ -371,7 +386,8 @@ function renderHistoricalChart(csvText) {
   const lines = csvText.split("\n");
   if (lines.length < 2) return;
   
-  const headers = lines[0].split(",");
+  // Trim headers to remove \r from Windows CRLF files
+  const headers = lines[0].split(",").map(h => h.trim());
   const cpuIdx = headers.indexOf("cpu_utilization");
   const ramIdx = headers.indexOf("ram_utilization");
   const latIdx = headers.indexOf("latency_ms");

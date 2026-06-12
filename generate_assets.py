@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report, ConfusionMatrixDisplay
 
 # Setup paths
-WORKSPACE_DIR = r"C:\Users\Divya Mohan Nayak\OneDrive\Desktop\New folder"
-ARTIFACT_DIR = r"C:\Users\Divya Mohan Nayak\.gemini\antigravity-ide\brain\e51c0a55-87af-4fc1-8df9-b7f3b0a217f7"
+WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARTIFACT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 1. Generate Synthetic Server Telemetry Logs
 print("Generating synthetic telemetry data...")

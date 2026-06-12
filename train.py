@@ -1,4 +1,5 @@
 import os
+# pyrefly: ignore [missing-import]
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -67,3 +68,18 @@ def train_model(csv_path: str, model_path: str) -> dict:
         "governed_records": int(y.sum()),
         "stable_records": int(len(df) - y.sum())
     }
+
+if __name__ == "__main__":
+    import os
+    # Define paths relative to this script
+    workspace = os.path.dirname(os.path.abspath(__file__))
+    csv_file = os.path.join(workspace, "server_logs.csv")
+    model_file = os.path.join(workspace, "governor_model.pkl")
+    
+    print(f"Starting model training...\nReading from: {csv_file}")
+    try:
+        results = train_model(csv_file, model_file)
+        print("Training completed successfully!")
+        print(f"Metrics: {results}")
+    except Exception as e:
+        print(f"Training failed: {e}")
