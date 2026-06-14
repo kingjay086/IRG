@@ -287,14 +287,16 @@ def trigger_train(background_tasks: BackgroundTasks):
 async def browse_endpoint():
     """
     Non-essential browse path. When predictive risk is flagged as HIGH (Governed),
-    this path executes load shedding (returns 429).
+    this path uses Probabilistic Shedding to drop a percentage of requests.
     """
     if state.ai_middleware_active and state.governor_status == "GOVERNED":
-        state.shed_browse += 1
-        return JSONResponse(
-            status_code=429,
-            content={"error": "Too Many Requests", "message": "Intelligent Resource Governor shed request to safeguard Gold Paths."}
-        )
+        # Probabilistic Shedding: drop 75% of requests to save the server, but let 25% browse
+        if np.random.random() < 0.75:
+            state.shed_browse += 1
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Too Many Requests", "message": "Intelligent Resource Governor shed request to safeguard Gold Paths."}
+            )
     
     # Simulate DB latency/heavy computation
     state.allowed_browse += 1
